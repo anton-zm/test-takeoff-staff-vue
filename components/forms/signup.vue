@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="successSignup" class="popup__form" id="sign-up-form">
+  <form @submit.prevent="signup" class="popup__form" id="sign-up-form">
     <h3 class="popup__title">Регистрация</h3>
     <p class="popup__label">Email</p>
     <input
@@ -8,6 +8,7 @@
       class="popup__input"
       id="signup-input-email"
       placeholder="Введите почту"
+      v-model="email"
       required
     />
     <p class="popup__error" id="signup-email-error"></p>
@@ -20,6 +21,7 @@
       minlength="8"
       maxlength="30"
       placeholder="Введите пароль"
+      v-model="password"
       required
     />
     <p class="popup__error" id="signup-password-error"></p>
@@ -32,10 +34,13 @@
       minlength="2"
       maxlength="30"
       placeholder="Введите своё имя"
+      v-model="name"
       required
     />
     <p class="popup__error" id="signup-name-error"></p>
-    <p class="popup__error popup__error_server" id="signup-server-error"></p>
+    <p class="popup__error popup__error_server" id="signup-server-error">
+      {{ serverError }}
+    </p>
     <button type="submit" class="popup__button" id="signup-btn">
       Зарегистрироваться
     </button>
@@ -53,9 +58,41 @@
 
 <script>
 export default {
+  data() {
+    return {
+      serverError: '',
+      name: '',
+      email: '',
+      password: '',
+    }
+  },
   methods: {
-    successSignup() {
-      this.$store.commit('popup/toggleSuccess')
+    signup() {
+      return fetch(`https://api.diploma.ml/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: this.name,
+          email: this.email,
+          password: this.password,
+        }),
+      })
+        .then((res) => {
+          if (res.ok) {
+            return res.json()
+          }
+          if (res.status === 409) {
+            this.serverError = 'Такой пользователь уже существует'
+          }
+          return Promise.reject(new Error())
+        })
+        .then(this.$store.commit('popup/toggleSuccess'))
+        .catch((err) => {
+          console.log(err)
+          this.serverError = 'Что-то пошло не так...'
+        })
     },
   },
 }
