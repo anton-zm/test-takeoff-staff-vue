@@ -3,6 +3,8 @@ export const state = () => ({
   signInShown: true,
   signUpShown: false,
   successShown: false,
+  addContact: false,
+  editContact: false,
 })
 
 // change state from here
@@ -28,6 +30,15 @@ export const mutations = {
     state.signUpShown = false
     state.successShown = false
   },
+  toggleAdd(state) {
+    state.signInShown = false
+    state.addContact = true
+  },
+  toggleEdit(state) {
+    state.signInShown = false
+    state.addContact = false
+    state.editContact = true
+  },
 }
 
 // get data about my state
@@ -43,5 +54,11 @@ export const getters = {
   },
   getSuccessShown(state) {
     return state.successShown
+  },
+  getAdd(state) {
+    return state.addContact
+  },
+  getEdit(state) {
+    return state.editContact
   },
 }

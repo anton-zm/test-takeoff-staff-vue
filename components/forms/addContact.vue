@@ -1,114 +1,105 @@
 <template>
   <form
-    @submit.prevent="signin"
+    @submit.prevent="addContact"
     class="popup__form"
-    id="sign-in-form"
+    id="add-contact-form"
     novalidate
   >
-    <h3 class="popup__title">Вход</h3>
-    <p class="popup__label">Email</p>
+    <h3 class="popup__title">Новый контакт</h3>
+    <p class="popup__label">Имя</p>
     <input
-      name="email"
-      type="email"
+      name="name"
+      type="text"
       class="popup__input"
-      id="signin-input-email"
-      placeholder="Введите почту"
-      v-model="email"
-      @input="validation"
-      required
-    />
-    <p class="popup__error" id="signin-email-error"></p>
-    <p class="popup__label">Пароль</p>
-    <input
-      name="password"
-      type="password"
-      class="popup__input"
-      id="signin-input-password"
-      minlength="8"
+      id="add-input-name"
+      placeholder="Введите имя"
+      minlength="2"
       maxlength="30"
-      placeholder="Введите пароль"
-      v-model="password"
+      v-model="name"
       @input="validation"
       required
     />
-    <p class="popup__error" id="signin-password-error"></p>
-    <p class="popup__error popup__error_server" id="signin-server-error">
+    <p class="popup__error" id="add-email-error"></p>
+    <p class="popup__label">Телефон</p>
+    <input
+      name="phone"
+      type="text"
+      class="popup__input"
+      id="add-input-phone"
+      minlength="5"
+      maxlength="12"
+      pattern="[0-9\-]*"
+      placeholder="Введите номер телефона"
+      v-model="phone"
+      @input="validation"
+      required
+    />
+    <p class="popup__error"></p>
+    <p class="popup__error popup__error_server" id="add-server-error">
       {{ serverError }}
     </p>
     <button
       type="submit"
       class="popup__button"
       :class="{ popup__button_active: button }"
-      id="signin-btn"
+      id="add-btn"
       disabled
     >
-      Войти
+      Добавить
     </button>
-    <p class="popup__call">
-      или
-      <span
-        @click="$emit('showForm')"
-        class="popup__link"
-        id="popup__signup-link"
-        >Зарегистрироваться</span
-      >
-    </p>
   </form>
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   data() {
     return {
+      name: '',
+      phone: '',
       serverError: '',
-      password: '',
-      email: '',
       button: false,
     }
   },
-  // anton@mail2323.ru
   methods: {
+    addContact() {
+      const JWT_TOKEN = localStorage.getItem('token')
+      return fetch(`https://api.diploma.ml/contacts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${JWT_TOKEN}`,
+        },
+        body: JSON.stringify({
+          name: this.name,
+          phone: this.phone,
+        }),
+      })
+        .then((res) => {
+          if (res.ok) {
+            return res.json()
+          }
+
+          return Promise.reject(new Error())
+        })
+        .then(this.$store.commit('popup/togglePopUp'))
+        .then(window.location.reload())
+        .catch((err) => {
+          console.log(err)
+          this.serverError = 'Что-то пошло не так...'
+        })
+    },
     validation() {
-      const emailField = document.querySelector('#signin-input-email')
-      const passwordField = document.querySelector('#signin-input-password')
-      const btn = document.querySelector('#signin-btn')
-      if (emailField.validity.valid && passwordField.validity.valid) {
+      const nameField = document.querySelector('#add-input-name')
+      const phoneField = document.querySelector('#add-input-phone')
+      const btn = document.querySelector('#add-btn')
+      if (nameField.validity.valid && phoneField.validity.valid) {
         this.button = true
         btn.removeAttribute('disabled')
       } else {
         this.button = false
         btn.setAttribute('disabled', 'true')
       }
-    },
-    signin() {
-      return fetch(`https://api.diploma.ml/signin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: this.email, password: this.password }),
-      })
-        .then((res) => res.json())
-        .then((res) => {
-          if (res.message) {
-            return Promise.reject(res.message)
-          }
-          return res
-        })
-        .then((data) => {
-          localStorage.setItem('token', data.token)
-
-          return data
-        })
-        .then(() => {
-          this.$store.commit('popup/togglePopUp')
-          window.location.reload()
-        })
-
-        .catch((err) => {
-          console.log(err)
-          this.serverError = 'Неправильная почта или пароль'
-        })
     },
   },
 }

@@ -8,6 +8,7 @@
       class="popup__input"
       id="signup-input-email"
       placeholder="Введите почту"
+      @input="validation"
       v-model="email"
       required
     />
@@ -18,9 +19,10 @@
       type="password"
       class="popup__input"
       id="signup-input-password"
-      minlength="8"
+      minlength="6"
       maxlength="30"
       placeholder="Введите пароль"
+      @input="validation"
       v-model="password"
       required
     />
@@ -34,6 +36,7 @@
       minlength="2"
       maxlength="30"
       placeholder="Введите своё имя"
+      @input="validation"
       v-model="name"
       required
     />
@@ -41,7 +44,12 @@
     <p class="popup__error popup__error_server" id="signup-server-error">
       {{ serverError }}
     </p>
-    <button type="submit" class="popup__button" id="signup-btn">
+    <button
+      type="submit"
+      class="popup__button"
+      :class="{ popup__button_active: button }"
+      id="signup-btn"
+    >
       Зарегистрироваться
     </button>
     <p class="popup__call">
@@ -64,9 +72,27 @@ export default {
       name: '',
       email: '',
       password: '',
+      button: false,
     }
   },
   methods: {
+    validation() {
+      const emailField = document.querySelector('#signup-input-email')
+      const passwordField = document.querySelector('#signup-input-password')
+      const nameField = document.querySelector('#signup-input-name')
+      const btn = document.querySelector('#signup-btn')
+      if (
+        emailField.validity.valid &&
+        passwordField.validity.valid &&
+        nameField.validity.valid
+      ) {
+        this.button = true
+        btn.removeAttribute('disabled')
+      } else {
+        this.button = false
+        btn.setAttribute('disabled', 'true')
+      }
+    },
     signup() {
       return fetch(`https://api.diploma.ml/signup`, {
         method: 'POST',

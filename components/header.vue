@@ -3,12 +3,23 @@
     <content-box class="header__content">
       <p class="header__logo" @click="toHome">TakeoffStaff</p>
       <nav class="header__menu">
-        <nuxt-link to="/" class="header__link header__link_active"
+        <nuxt-link
+          v-if="!auth"
+          to="/"
+          class="header__link header__link_active"
+        ></nuxt-link>
+        <nuxt-link v-if="auth" to="/" class="header__link header__link_active"
           >Главная</nuxt-link
         >
-        <nuxt-link to="./contacts" class="header__link">Мои контакты</nuxt-link>
-        <button class="header__button" id="auth-btn" @click="showPopUp">
+        <nuxt-link v-if="auth" to="./contacts" class="header__link"
+          >Мои контакты</nuxt-link
+        >
+        <button v-if="!auth" class="header__button" @click="showPopUp">
+          Авторизоваться
+        </button>
+        <button v-if="auth" class="header__button" @click="exit">
           {{ btnText }}
+          <img src="logout.png" alt="Выйти" class="header__button-img" />
         </button>
       </nav>
       <div class="header__menu-icon" id="mobile-menu-icon">
@@ -62,6 +73,11 @@ export default {
       this.$store.commit('popup/toggleSignUp')
       this.$store.commit('popup/toggleSignIn')
     },
+    exit() {
+      confirm('Вы хотите выйти?')
+      localStorage.clear()
+      window.location.reload()
+    },
 
     test() {
       console.log('JKKKKKKK')
@@ -70,6 +86,7 @@ export default {
   data() {
     return {
       btnText: 'Авторизоваться',
+      auth: false,
     }
   },
   components: {
@@ -83,8 +100,18 @@ export default {
 
   mounted() {
     const JWT_TOKEN = localStorage.getItem('token')
-    if (!JWT_TOKEN) {
-      this.test()
+    console.log(JWT_TOKEN)
+    if (JWT_TOKEN && JWT_TOKEN !== undefined) {
+      return axios
+        .get('https://api.diploma.ml/users/me', {
+          headers: {
+            Authorization: `Bearer ${JWT_TOKEN}`,
+          },
+        })
+        .then((response) => {
+          this.auth = true
+          this.btnText = response.data.name
+        })
     }
   },
 }
@@ -139,28 +166,10 @@ export default {
   align-items: center;
 }
 
-.header__button_articles {
-  color: #1a1b22;
-  border: 1px solid #1a1b22;
-}
-
-.header__button-icon {
-}
-
-.header__button-icon::after {
-  content: url('../static/logout.png');
+.header__button-img {
   margin-left: 5px;
-  transform: translateY(5px);
 }
 
-.header__button-icon_articles {
-}
-
-.header__button-icon_articles::after {
-  content: url('../static/logout.svg');
-  margin-left: 5px;
-  transform: translateY(5px);
-}
 .header__headings {
   width: 608px;
   margin: 80px auto 0;
