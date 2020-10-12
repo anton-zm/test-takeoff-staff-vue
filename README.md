@@ -18,6 +18,9 @@
 ## Запуск
 
 ```bash
+# клонировать репозиторий
+git clone https://github.com/anton-zm/test-takeoff-staff-vue.git
+
 # установить зависимости
 $ npm install
 
